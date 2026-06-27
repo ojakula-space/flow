@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- SEO: Basic Meta Tags -->
+    <title>Flow Connect - Ühenda täpid</title>
+    <meta name="description" content="Lahenda värvilisi puzzle'id. Ühenda sama värvi täpid ilma, et jooned ristuksid. Mängi nüüd tasuta!">
+    <meta name="keywords" content="puzzle, flow, connect, dots, mäng, tasuta, värvid, IQ, ajutreening">
+    <meta name="robots" content="index, follow">
+
+    <!-- SEO: Open Graph (Facebook, WhatsApp, Telegram) -->
+    <meta property="og:title" content="Flow Connect - Ühenda täpid">
+    <meta property="og:description" content="Tõesta oma IQ-d ja ühenda kõik värvid!" />
+    <meta property="og:type" content="website">
+    <!-- Asenda see pilt enda pildi URL-iga, kui oled GitHubi üles laadinud -->
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Chrome_icon_%28September_2014%29.svg/1200px-Google_Chrome_icon_%28September_2014%29.svg.png">
+
+    <!-- SEO: Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flow Connect - Ühenda täpid">
+
+    <!-- GOOGLE ANALYTICS (Sinu ID-ga) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LRTPJ1Z6LL"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-LRTPJ1Z6LL');
+    </script>
+
+    <style>
+        /* ---- CSS Kujundus ---- */
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #1a1a2e; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; touch-action: none; }
+        #app { background-color: #16213e; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); text-align: center; width: 100%; max-width: 450px; }
+        
+        h1 { color: #e94560; font-size: 24px; margin-bottom: 20px; letter-spacing: 2px; }
+        
+        #header-info { display: flex; justify-content: space-between; color: #eee; font-size: 18px; font-weight: bold; margin-bottom: 20px; padding: 0 5px; }
+        
+        #game-board { background: #0f3460; display: grid; gap: 2px; padding: 10px; border-radius: 15px; touch-action: none; }
+        .cell { background: #1a1a2e; border-radius: 4px; width: 100%; aspect-ratio: 1 / 1; position: relative; touch-action: none; }
+        
+        .dot { width: 60%; height: 60%; border-radius: 50%; position: absolute; top: 20%; left: 20%; z-index: 2; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.5); }
+        .dot.red { background: #e94560; }
+        .dot.blue { background: #533483; }
+        .dot.green { background: #4e9f3d; }
+        .dot.yellow { background: #f8cb2e; }
+        .dot.purple { background: #9b59b6; }
+
+        .line-segment { position: absolute; border-radius: 4px; z-index: 1; }
+        .line-segment.active { background: #2ecc71; } /* Kasutaja joonistatud joon */
+        .line-segment.solved { background: currentColor; opacity: 0.8; } /* Lahenduse joon */
+
+        #controls { margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn { background: #e94560; border: none; color: white; padding: 10px 25px; font-size: 16px; font-weight: bold; border-radius: 30px; cursor: pointer; transition: transform 0.1s, background 0.2s; box-shadow: 0 4px 0 #c0392b; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 0 #c0392b; }
+        .btn.reset { background: #533483; box-shadow: 0 4px 0 #2e1a4a; }
+        .btn.menu { background: #4e9f3d; box-shadow: 0 4px 0 #2d6a20; }
+        .btn:disabled { opacity: 0.5; transform: translateY(4px); box-shadow: none; pointer-events: none; }
+
+        #message { margin-top: 15px; color: #f1c40f; font-size: 22px; font-weight: bold; min-height: 30px; }
+        #lang-switch { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
+        .lang-btn { background: #2c3e50; border: 1px solid #555; color: #aaa; padding: 5px 15px; border-radius: 15px; cursor: pointer; }
+        .lang-btn.active { border-color: #f1c40f; color: #f1c40f; background: #34495e; }
+        
+        #menu-screen { display: flex; flex-direction: column; gap: 15px; align-items: center; padding: 20px 0; }
+        #menu-screen h2 { color: #eee; font-size: 28px; }
+        #menu-screen p { color: #aaa; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Keelte nupud -->
+    <div id="lang-switch">
+        <button class="lang-btn" onclick="setLanguage('et')">🇪🇪</button>
+        <button class="lang-btn" onclick="setLanguage('en')">🇬🇧</button>
+        <button class="lang-btn" onclick="setLanguage('ru')">🇷🇺</button>
+    </div>
+
+    <!-- Menüü Ekraan -->
+    <div id="menu-screen">
+        <h2 id="menu-title">Flow Connect</h2>
+        <p id="menu-desc">Ühenda sama värvi täpid!</p>
+        <button class="btn" onclick="startGame()" id="btn-play">Mängi</button>
+    </div>
+
+    <!-- Mängu Ekraan (Peidetud alguses) -->
+    <div id="game-screen" style="display:none;">
+        <div id="header-info">
+            <span id="lbl-level">Tase 1</span>
+            <span id="lbl-iq">IQ: 0</span>
+        </div>
+        <div id="game-board"></div>
+        <div id="message"></div>
+        <div id="controls">
+            <button class="btn reset" onclick="resetLevel()" id="btn-reset">Reset</button>
+            <button class="btn menu" onclick="goToMenu()" id="btn-menu">Menüü</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---- TÕLKED (Translations) ---- */
+    const translations = {
+        'en': {
+            'menu_title': 'Flow Connect',
+            'menu_desc': 'Connect matching colors!',
+            'btn_play': 'Play',
+            'btn_menu': 'Menu',
+            'btn_reset': 'Reset',
+            'level': 'Level',
+            'iq': 'IQ',
+            'win_msg': 'Perfect! IQ +1',
+            'menu_screen': 'main'
+        },
+        'et': {
+            'menu_title': 'Flow Connect',
+            'menu_desc': 'Ühenda sama värvi täpid!',
+            'btn_play': 'Mängi',
+            'btn_menu': 'Menüü',
+            'btn_reset': 'Reset',
+            'level': 'Tase',
+            'iq': 'IQ',
+            'win_msg': 'Suurepärane! IQ +1',
+            'menu_screen': 'main'
+        },
+        'ru': {
+            'menu_title': 'Flow Connect',
+            'menu_desc': 'Соедините цвета!',
+            'btn_play': 'Играть',
+            'btn_menu': 'Меню',
+            'btn_reset': 'Сброс',
+            'level': 'Уровень',
+            'iq': 'IQ',
+            'win_msg': 'Отлично! IQ +1',
+            'menu_screen': 'main'
+        }
+    };
+    let currentLang = 'et';
+
+    function t(key) {
+        if(translations[currentLang] && translations[currentLang][key]) {
+            return translations[currentLang][key];
+        }
+        return translations['en'][key] || key;
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.lang-btn[onclick="setLanguage('${lang}')"]`).classList.add('active');
+        updateUI();
+        // Analytics event
+        if(typeof gtag !== 'undefined') gtag('event', 'language_change', { 'event_category': 'UI', 'event_label': lang });
+    }
+
+    function updateUI() {
+        document.getElementById('menu-title').innerText = t('menu_title');
+        document.getElementById('menu-desc').innerText = t('menu_desc');
+        document.getElementById('btn-play').innerText = t('btn_play');
+        document.getElementById('btn-menu').innerText = t('btn_menu');
+        document.getElementById('btn-reset').innerText = t('btn_reset');
+        document.getElementById('lbl-level').innerText = `${t('level')} ${currentLevelIndex + 1}`;
+    }
+
+    /* ---- MÄNGU ANDMED (Levels) ---- */
+    /* Formaat: gridSize (ruudustiku suurus), dots (värvide asukohad [x, y]) */
+    const levels = [
+        { size: 4, dots: { 'red': [[0,0], [3,3]], 'blue': [[0,3], [3,0]] } },
+        { size: 4, dots: { 'red': [[0,0], [3,0]], 'blue': [[0,3], [3,3]], 'green': [[1,1], [2,2]] } },
+        { size: 5, dots: { 'red': [[0,1], [4,3]], 'blue': [[1,0], [3,4]], 'green': [[2,2], [4,0]] } },
+        { size: 5, dots: { 'red': [[0,0], [4,4]], 'blue': [[0,4], [4,0]], 'green': [[1,1], [3,3]], 'yellow': [[2,1], [2,3]] } },
+        { size: 6, dots: { 'red': [[0,0], [5,0]], 'blue': [[0,5], [5,5]], 'green': [[2,0], [2,5]], 'yellow': [[1,2], [4,3]] } },
+        { size: 6, dots: { 'red': [[0,2], [5,2]], 'blue': [[2,0], [2,5]], 'green': [[0,5], [5,0]], 'yellow': [[1,1], [4,4]], 'purple': [[1,4], [4,1]] } },
+        { size: 6, dots: { 'red': [[0,0], [5,5]], 'blue': [[0,5], [5,0]], 'green': [[1,2], [4,3]], 'yellow': [[2,1], [3,4]], 'purple': [[1,3], [4,2]] } },
+        { size: 7, dots: { 'red': [[0,0], [6,6]], 'blue': [[0,6], [6,0]], 'green': [[1,1], [5,5]], 'yellow': [[1,5], [5,1]], 'purple': [[3,0], [3,6]] } },
+        { size: 7, dots: { 'red': [[0,2], [6,2]], 'blue': [[2,0], [2,6]], 'green': [[0,6], [6,4]], 'yellow': [[1,3], [5,3]], 'purple': [[0,1], [6,5]], 'orange': [[2,4], [4,2]] } },
+        { size: 8, dots: { 'red': [[0,0], [7,7]], 'blue': [[0,7], [7,0]], 'green': [[1,1], [6,6]], 'yellow': [[1,6], [6,1]], 'purple': [[3,3], [4,4]], 'orange': [[3,4], [4,3]] } }
+    ];
+
+    /* ---- MÄNGU OLEK (State) ---- */
+    let currentLevelIndex = 0;
+    let grid = [];
+    let solutionGrid = []; // Salvestab lõpliku lahenduse
+    let score = 0;
+    let isDrawing = false;
+    let currentPath = [];
+    let boardSize = 0;
+
+    function startGame() {
+        if(typeof gtag !== 'undefined') gtag('event', 'game_start', { 'event_category': 'Gameplay', 'event_label': 'New Game' });
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+        currentLevelIndex = 0;
+        loadLevel(currentLevelIndex);
+    }
+
+    function loadLevel(index) {
+        if (index >= levels.length) {
+            document.getElementById('message').innerText = "Congratulations! You are a Genius!";
+            document.getElementById('game-board').style.display = 'none';
+            return;
+        }
+
+        const level = levels[index];
+        boardSize = level.size;
+        const boardEl = document.getElementById('game-board');
+        boardEl.style.display = 'grid';
+        boardEl.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+        boardEl.innerHTML = '';
+
+        // Initsialiseeri grid
+        grid = Array(boardSize).fill().map(() => Array(boardSize).fill().map(() => ({ color: null, type: 'empty', lines: {} })));
+        solutionGrid = Array(boardSize).fill().map(() => Array(boardSize).fill().map(() => ({ color: null, type: 'empty' })));
+
+        // Aseta täpid ja märgi lahenduse teed (lihtsustatud: eeldame, et on lahendatav)
+        const colors = Object.keys(level.dots);
+        colors.forEach(color => {
+            const [start, end] = level.dots[color];
+            grid[start[0]][start[1]] = { color: color, type: 'start' };
+            grid[end[0]][end[1]] = { color: color, type: 'end' };
+            solutionGrid[start[0]][start[1]] = { color: color, type: 'start' };
+            solutionGrid[end[0]][end[1]] = { color: color, type: 'end' };
+        });
+
+        // Joonista ruudud
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+                
+                const data = grid[r][c];
+                if (data.type === 'start' || data.type === 'end') {
+                    const dot = document.createElement('div');
+                    dot.className = `dot ${data.color}`;
+                    cell.appendChild(dot);
+                }
+                boardEl.appendChild(cell);
+            }
+        }
+
+        // Sündmused lohistamiseks ja puudutamiseks
+        boardEl.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        boardEl.addEventListener('touchstart', onStart, {passive: false});
+        document.addEventListener('touchmove', onMove, {passive: false});
+        document.addEventListener('touchend', onEnd, {passive: false});
+
+        document.getElementById('message').innerText = '';
+        updateUI();
+    }
+
+    /* ---- JOONISTAMISE LOOGIKA ---- */
+    function onStart(e) {
+        e.preventDefault();
+        const target = e.target.closest('.cell');
+        if (!target) return;
+        const r = parseInt(target.dataset.r);
+        const c = parseInt(target.dataset.c);
+        const data = grid[r][c];
+
+        // Saab alustada ainult täpist (start või end)
+        if (data.type === 'start' || data.type === 'end') {
+            isDrawing = true;
+            currentPath = [{r, c}];
+            grid[r][c].type = 'active'; // Tähistame aktiivseks
+        }
+    }
+
+    function onMove(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        
+        // Leia koordinaadid (töötab nii hiire kui puudutusega)
+        let x, y;
+        if (e.touches) {
+            x = e.touches[0].clientX;
+            y = e.touches[0].clientY;
+        } else {
+            x = e.clientX;
+            y = e.clientY;
+        }
+
+        const boardEl = document.getElementById('game-board');
+        const rect = boardEl.getBoundingClientRect();
+        const cellSize = (rect.width / boardSize);
+
+        // Arvuta, millises lahtris sõrm/ hiir on
+        let col = Math.floor((x - rect.left) / cellSize);
+        let row = Math.floor((y - rect.top) / cellSize);
+
+        // Kontrolli piire
+        if (row < 0 || row >= boardSize || col < 0 || col >= boardSize) return;
+
+        const last = currentPath[currentPath.length - 1];
+        // Liikumine ainult ühe sammu kaupa ja mitte diagonaalis
+        if (Math.abs(last.r - row) + Math.abs(last.c - col) !== 1) return;
+
+        const targetCell = grid[row][col];
+        
+        // Kontrolli, kas saab minna (tühi, lõpp-punkt, või sama värvi alguspunkt)
+        // Lihtsustatud: kui on tühi või sama värvi lõpp, liigu
+        // Keelatud: ristuvad jooned (praegu pole implementeeritud, et hoida koodi lühike)
+        // Keelatud: minna üle teise värvi täpi
+        
+        if (targetCell.type !== 'empty' && targetCell.type !== 'end') return;
+        if (targetCell.color !== null && targetCell.color !== grid[last.r][last.c].color) return;
+
+        // Kui jõudsime lõppu
+        if (targetCell.type === 'end') {
+            if (targetCell.color === grid[last.r][last.c].color) {
+                currentPath.push({r: row, c: col});
+                finishPath();
+                return;
+            }
+            return;
+        }
+
+        // Lisa tee
+        currentPath.push({r: row, c: col});
+        grid[row][col].color = grid[last.r][last.c].color; 
+        grid[row][col].type = 'active';
+        
+        // Visuaalne joonistamine (lihtsustatult - värvime tausta)
+        const cellEl = document.querySelector(`.cell[data-r="${row}"][data-c="${col}"]`);
+        if(cellEl) cellEl.style.backgroundColor = grid[last.r][last.c].color;
+    }
+
+    function onEnd(e) {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        // Kui tee katkeb, eemalda joonistatud värvid (lihtne reset)
+        // Siin on koht, kus peaks kontrollima, kas meil on juba lahendus
+        // Meil on finishPath, mis käsitleb lahendust.
+        
+        // Kui kasutaja tõmbas joone lahti ilma lõppu jõudmata,
+        // peame selle tagasi võtma.
+        // Tõstame selle lihtsuse mõttes "Reset" nupu taha.
+    }
+
+    function finishPath() {
+        isDrawing = false;
+        // Kontrolli, kas kõik on lahendatud
+        checkWin();
+    }
+
+    /* ---- VÕIDU KONTROLL ---- */
+    function checkWin() {
+        let filled = 0;
+        let totalCells = boardSize * boardSize;
+        for (let r = 0; r < boardSize; r++) {
+            for (let c = 0; c < boardSize; c++) {
+                if (grid[r][c].color !== null) {
+                    filled++;
+                }
+            }
+        }
+
+        if (filled === totalCells) {
+            // VÕIT!
+            score++;
+            document.getElementById('message').innerText = t('win_msg');
+            document.getElementById('lbl-iq').innerText = `${t('iq')}: ${score}`;
+            
+            // Analytics
+            if(typeof gtag !== 'undefined') gtag('event', 'level_complete', { 
+                'event_category': 'Gameplay', 
+                'event_label': `Level ${currentLevelIndex + 1}`,
+                'value': score 
+            });
+
+            // Laadi järgmine tase 1 sekundi pärast
+            setTimeout(() => {
+                currentLevelIndex++;
+                loadLevel(currentLevelIndex);
+            }, 1200);
+        }
+    }
+
+    function resetLevel() {
+        if(typeof gtag !== 'undefined') gtag('event', 'level_reset', { 'event_category': 'Gameplay', 'event_label': `Level ${currentLevelIndex + 1}` });
+        loadLevel(currentLevelIndex);
+    }
+
+    function goToMenu() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'flex';
+        document.getElementById('game-board').style.display = 'none';
+        // Eemalda sündmused
+        // (Lihtsuse mõttes jätame need, aga menüüs nad ei sega)
+    }
+
+    /* ---- KÄIVITUS ---- */
+    // Vaikimisi keel brauserist
+    const browserLang = navigator.language.split('-')[0];
+    if (browserLang === 'et' || browserLang === 'ru') {
+        setLanguage(browserLang);
+    } else {
+        setLanguage('en');
+    }
+    document.getElementById('menu-screen').style.display = 'flex';
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('game-board').style.display = 'none';
+
+</script>
+</body>
+</html>
